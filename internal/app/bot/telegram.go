@@ -34,6 +34,8 @@ func (b *TelegramBot) Start() {
 				handleDutyCommand(b.api, update.Message, b.service)
 			case "set_schedule":
 				handleSetScheduleCommand(b.api, update, b.service)
+			case "checklist":
+				handleChecksCommand(b.api, update.Message)
 			default:
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Неизвестная команда")
 				b.api.Send(msg)
