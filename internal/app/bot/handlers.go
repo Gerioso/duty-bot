@@ -1,7 +1,8 @@
 package bot
 
 import (
-	"duty-bot/internal/app/duty"
+	"duty-bot/internal/domain/duty"
+	"duty-bot/internal/domain/employee"
 	"fmt"
 	"strings"
 	"time"
@@ -9,23 +10,20 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func handleDutyCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message, service *duty.Service) {
-	currentDuty, err := service.GetCurrentDuty()
+// handleDutyCommand обрабатывает команду /duty
+func handleDutyCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message, dutyService *duty.DutyService) {
+	currentDuty, err := dutyService.GetCurrentDuty()
 	if err != nil {
-		msg := tgbotapi.NewMessage(message.Chat.ID, "Ошибка: не удалось получить дежурного")
-		bot.Send(msg)
+		bot.Send(tgbotapi.NewMessage(message.Chat.ID, "Ошибка: "+err.Error()))
 		return
 	}
 
-	// Логируем текущий дежурный
-	fmt.Printf("Текущий дежурный: %s (с %s)\n", currentDuty.Name, currentDuty.WeekStart.Format("02.01.2006"))
-
 	response := fmt.Sprintf("Сейчас дежурит: %s (с %s)", currentDuty.Name, currentDuty.WeekStart.Format("02.01.2006"))
-	msg := tgbotapi.NewMessage(message.Chat.ID, response)
-	bot.Send(msg)
+	bot.Send(tgbotapi.NewMessage(message.Chat.ID, response))
 }
 
-func handleSetScheduleCommand(bot *tgbotapi.BotAPI, update tgbotapi.Update, service *duty.Service) {
+// handleSetScheduleCommand обрабатывает команду /set_schedule
+func handleSetScheduleCommand(bot *tgbotapi.BotAPI, update tgbotapi.Update, dutyService *duty.DutyService) {
 	if update.Message == nil || update.Message.Chat.Type != "private" {
 		return
 	}
@@ -39,21 +37,68 @@ func handleSetScheduleCommand(bot *tgbotapi.BotAPI, update tgbotapi.Update, serv
 	name := args[1]
 	weekStart := args[2]
 
-	err := service.SetDuty(name, weekStart)
+	parsedWeekStart, err := time.Parse("2006-01-02", weekStart)
 	if err != nil {
-		bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка сохранения расписания: "+err.Error()))
+		bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка: неверный формат даты. Используйте YYYY-MM-DD"))
+		return
+	}
+
+	if err := dutyService.SetDuty(name, parsedWeekStart); err != nil {
+		bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Ошибка: "+err.Error()))
 		return
 	}
 
 	bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Расписание обновлено!"))
 }
 
+// handleRotateCommand обрабатывает команду /rotate
+func handleRotateCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message, dutyService *duty.DutyService) {
+	if err := dutyService.RotateDuty(); err != nil {
+		bot.Send(tgbotapi.NewMessage(message.Chat.ID, "Ошибка: "+err.Error()))
+		return
+	}
+
+	bot.Send(tgbotapi.NewMessage(message.Chat.ID, "Дежурные успешно ротированы!"))
+}
+
+// handleAddEmployeeCommand обрабатывает команду /add_employee
+func handleAddEmployeeCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message, employeeService *employee.EmployeeService) {
+	args := strings.Fields(message.Text)
+	if len(args) != 2 {
+		bot.Send(tgbotapi.NewMessage(message.Chat.ID, "Формат: /add_employee <имя>"))
+		return
+	}
+
+	name := args[1]
+	if err := employeeService.AddEmployee(name); err != nil {
+		bot.Send(tgbotapi.NewMessage(message.Chat.ID, "Ошибка: "+err.Error()))
+		return
+	}
+
+	bot.Send(tgbotapi.NewMessage(message.Chat.ID, "Сотрудник добавлен!"))
+}
+
+// handleRemoveEmployeeCommand обрабатывает команду /remove_employee
+func handleRemoveEmployeeCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message, employeeService *employee.EmployeeService) {
+	args := strings.Fields(message.Text)
+	if len(args) != 2 {
+		bot.Send(tgbotapi.NewMessage(message.Chat.ID, "Формат: /remove_employee <имя>"))
+		return
+	}
+
+	name := args[1]
+	if err := employeeService.RemoveEmployee(name); err != nil {
+		bot.Send(tgbotapi.NewMessage(message.Chat.ID, "Ошибка: "+err.Error()))
+		return
+	}
+
+	bot.Send(tgbotapi.NewMessage(message.Chat.ID, "Сотрудник удалён!"))
+}
+
 // handleChecksCommand обрабатывает команду /checks
 func handleChecksCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
-	// Получаем текущую дату в нужном формате
 	today := time.Now().Format("02.01.2006")
 
-	// Формируем сообщение с чек-листом
 	checklist := fmt.Sprintf(`Шаблон Чек-листа для дежурного на %s
 
 Состояние стенда 💼
@@ -77,7 +122,21 @@ func handleChecksCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
  3) Возврат платежа ✅
 `, today)
 
-	// Отправляем сообщение пользователю
 	msg := tgbotapi.NewMessage(message.Chat.ID, checklist)
+	bot.Send(msg)
+}
+
+// handleHelpCommand обрабатывает команду /help
+func handleHelpCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
+	helpText := `Доступные команды:
+/duty - Показать текущего дежурного
+/set_schedule <имя> <дата> - Установить расписание дежурств
+/rotate - Ротировать дежурных
+/add_employee <имя> - Добавить сотрудника
+/remove_employee <имя> - Удалить сотрудника
+/checks - Показать чек-лист
+/help - Показать это сообщение`
+
+	msg := tgbotapi.NewMessage(message.Chat.ID, helpText)
 	bot.Send(msg)
 }
