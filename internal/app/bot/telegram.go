@@ -3,6 +3,7 @@ package bot
 import (
 	"duty-bot/internal/app/duty"
 	"log"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -23,12 +24,24 @@ func NewTelegramBot(token string, service *duty.Service) *TelegramBot {
 
 func (b *TelegramBot) Start() {
 	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
+	u.Timeout = 60 // Telegram рекомендует 50-60 сек
 
-	updates := b.api.GetUpdatesChan(u)
+	for {
+		updates, err := b.api.GetUpdates(u)
+		if err != nil {
+			log.Println("Ошибка получения обновлений:", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
 
-	for update := range updates {
-		if update.Message != nil && update.Message.IsCommand() {
+		for _, update := range updates {
+			if update.Message == nil || !update.Message.IsCommand() {
+				continue
+			}
+
+			// Обновляем Offset, чтобы не обрабатывать одно и то же сообщение
+			u.Offset = update.UpdateID + 1
+
 			switch update.Message.Command() {
 			case "duty":
 				handleDutyCommand(b.api, update.Message, b.service)
