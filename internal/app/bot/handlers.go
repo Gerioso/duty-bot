@@ -128,13 +128,13 @@ func handleChecksCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 
 // handleHelpCommand обрабатывает команду /help
 func handleHelpCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
+	// /rotate - Ротировать дежурных
 	helpText := `Доступные команды:
 /duty - Показать текущего дежурного
 /set_schedule <имя> <дата> - Установить расписание дежурств
-/rotate - Ротировать дежурных
 /add_employee <имя> - Добавить сотрудника
 /remove_employee <имя> - Удалить сотрудника
-/checks - Показать чек-лист
+/checklist - Показать чек-лист
 /help - Показать это сообщение`
 
 	msg := tgbotapi.NewMessage(message.Chat.ID, helpText)

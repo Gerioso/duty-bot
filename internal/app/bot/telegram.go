@@ -43,8 +43,8 @@ func (b *TelegramBot) Start() {
 			handleDutyCommand(b.api, update.Message, b.dutyService)
 		case "set_schedule":
 			handleSetScheduleCommand(b.api, update, b.dutyService)
-		case "rotate":
-			handleRotateCommand(b.api, update.Message, b.dutyService)
+		// case "rotate":
+		// 	handleRotateCommand(b.api, update.Message, b.dutyService)
 		case "add_employee":
 			handleAddEmployeeCommand(b.api, update.Message, b.employeeService)
 		case "remove_employee":

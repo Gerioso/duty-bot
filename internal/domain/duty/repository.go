@@ -12,6 +12,7 @@ var (
 
 type DutyRepository interface {
 	GetCurrentDuty() (models.Duty, error)
+	GetLastDuty() (models.Duty, error)
 	SetDuty(name string, weekStart time.Time) error
 	RotateDuty() error
 }

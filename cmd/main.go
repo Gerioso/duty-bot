@@ -34,7 +34,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Ошибка cоздания бд сотрудников: %v", err)
 	}
-	dutyService := duty.NewDutyService(dutyRepo)
+	dutyService := duty.NewDutyService(dutyRepo, employeeRepo)
 	employeeService := employee.NewEmployeeService(employeeRepo)
 
 	// Инициализируем Telegram-бота

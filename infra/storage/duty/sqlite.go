@@ -41,6 +41,18 @@ func (r *SQLiteDutyRepository) GetCurrentDuty() (models.Duty, error) {
 	d.WeekStart, _ = time.Parse("2006-01-02T15:04:05Z", weekStart)
 	return d, nil
 }
+func (r *SQLiteDutyRepository) GetLastDuty() (models.Duty, error) {
+	var d models.Duty
+	row := r.db.QueryRow("SELECT name, week_start FROM schedule ORDER BY week_start DESC LIMIT 1;")
+
+	var weekStart string
+	if err := row.Scan(&d.Name, &weekStart); err != nil {
+		return d, err
+	}
+
+	d.WeekStart, _ = time.Parse("2006-01-02T15:04:05Z", weekStart)
+	return d, nil
+}
 
 func (r *SQLiteDutyRepository) SetDuty(name string, weekStart time.Time) error {
 	_, err := r.db.Exec(`
