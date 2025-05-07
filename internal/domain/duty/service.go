@@ -3,7 +3,7 @@ package duty
 import (
 	"database/sql"
 	"duty-bot/internal/domain/employee"
-	"duty-bot/internal/domain/models"
+	"duty-bot/internal/domain/entities"
 	"errors"
 	"time"
 )
@@ -20,7 +20,7 @@ func NewDutyService(dutyRepo DutyRepository, employeeRepo employee.EmployeeRepos
 	}
 }
 
-func (s *DutyService) GetCurrentDuty() (models.Duty, error) {
+func (s *DutyService) GetCurrentDuty() (entities.Duty, error) {
 	d, err := s.dutyRepo.GetCurrentDuty()
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

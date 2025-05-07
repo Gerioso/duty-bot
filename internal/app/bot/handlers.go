@@ -3,6 +3,7 @@ package bot
 import (
 	"duty-bot/internal/domain/duty"
 	"duty-bot/internal/domain/employee"
+	"duty-bot/internal/domain/entities"
 	"fmt"
 	"strings"
 	"time"
@@ -128,14 +129,13 @@ func handleChecksCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 
 // handleHelpCommand обрабатывает команду /help
 func handleHelpCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
-	// /rotate - Ротировать дежурных
 	helpText := `Доступные команды:
-/duty - Показать текущего дежурного
-/set_schedule <имя> <дата> - Установить расписание дежурств
-/add_employee <имя> - Добавить сотрудника
-/remove_employee <имя> - Удалить сотрудника
-/checklist - Показать чек-лист
-/help - Показать это сообщение`
+/` + entities.CommandDuty + ` - Показать текущего дежурного
+/` + entities.CommandSetSchedule + ` <имя> <дата> - Установить расписание дежурств
+/` + entities.CommandAddEmployee + ` <имя> - Добавить сотрудника
+/` + entities.CommandRemoveEmployee + ` <имя> - Удалить сотрудника
+/` + entities.CommandChecklist + ` - Показать чек-лист
+/` + entities.CommandHelp + ` - Показать это сообщение`
 
 	msg := tgbotapi.NewMessage(message.Chat.ID, helpText)
 	bot.Send(msg)

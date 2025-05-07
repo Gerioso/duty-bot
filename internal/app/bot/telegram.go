@@ -3,6 +3,7 @@ package bot
 import (
 	"duty-bot/internal/domain/duty"
 	"duty-bot/internal/domain/employee"
+	"duty-bot/internal/domain/entities"
 	"log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -39,19 +40,17 @@ func (b *TelegramBot) Start() {
 		}
 
 		switch update.Message.Command() {
-		case "duty":
+		case entities.CommandDuty:
 			handleDutyCommand(b.api, update.Message, b.dutyService)
-		case "set_schedule":
+		case entities.CommandSetSchedule:
 			handleSetScheduleCommand(b.api, update, b.dutyService)
-		// case "rotate":
-		// 	handleRotateCommand(b.api, update.Message, b.dutyService)
-		case "add_employee":
+		case entities.CommandAddEmployee:
 			handleAddEmployeeCommand(b.api, update.Message, b.employeeService)
-		case "remove_employee":
+		case entities.CommandRemoveEmployee:
 			handleRemoveEmployeeCommand(b.api, update.Message, b.employeeService)
-		case "checklist":
+		case entities.CommandChecklist:
 			handleChecksCommand(b.api, update.Message)
-		case "help":
+		case entities.CommandHelp:
 			handleHelpCommand(b.api, update.Message)
 		default:
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Неизвестная команда")

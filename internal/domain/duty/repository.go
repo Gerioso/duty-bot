@@ -1,7 +1,7 @@
 package duty
 
 import (
-	"duty-bot/internal/domain/models"
+	"duty-bot/internal/domain/entities"
 	"errors"
 	"time"
 )
@@ -11,8 +11,8 @@ var (
 )
 
 type DutyRepository interface {
-	GetCurrentDuty() (models.Duty, error)
-	GetLastDuty() (models.Duty, error)
+	GetCurrentDuty() (entities.Duty, error)
+	GetLastDuty() (entities.Duty, error)
 	SetDuty(name string, weekStart time.Time) error
 	RotateDuty() error
 }
